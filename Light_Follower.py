@@ -1,23 +1,48 @@
-
-import PCF8591
 import math
 import time
 
 class Light_Follower(object):
 	"""docstring for light_follower_module"""
-	def __init__(self, address=0x48, references=[10, 10, 10]):
+	def __init__(self, chn0=0, chn1=1, chn2=2, references=[10, 10, 10], analog_function=None):
 		self.ADC = PCF8591.PCF8591(address)
 		self._references = references
+		if analog_function == None:
+			self.read_analog = None
+		else:
+			self.analog_function = analog_function
+		self._channel0 = chn0
+		self._channel1 = chn1
+		self._channel2 = chn2
 
-	def read_analog(self):
+	@property
+	def analog_function(self):
+		return self.read_analog
+
+	@analog_function.setter
+	def analog_function(self, func):
+		self.read_analog = func
+		if _analog_func_avalible():
+			pass
+
+	def _analog_func_avalible(self):
+		try:
+			self.read_analog(self._channel0)
+			self.read_analog(self._channel1)
+			self.read_analog(self._channel2)
+		except:
+			raise ValueError("analog function setup error, please set the analog with a callable function with only one arguement")
+		finally:
+			return True
+
+	def read_analogs(self):
 		analog_result = [0, 0, 0]
-		analog_result[0] = self.ADC.read(0)
-		analog_result[1] = self.ADC.read(1)
-		analog_result[2] = self.ADC.read(2)
+		analog_result[0] = self.read_analog(self._channel0)
+		analog_result[1] = self.read_analog(self._channel1)
+		analog_result[2] = self.read_analog(self._channel2)
 		return analog_result
 
 	def read_digital(self):	
-		analog_list = self.read_analog()
+		analog_list = self.read_analogs()
 		#print "Analog_result = %s, References = %s "%(lt, self._references)
 		digital_list = []
 		for i in range(0, 3):
@@ -49,7 +74,7 @@ class Light_Follower(object):
 		average = [0, 0, 0]
 		lt_list = [[], [], []]
 		for times in range(0, mount):
-			lt = self.read_analog()
+			lt = self.read_analogs()
 			for lt_id in range(0, 3):
 				lt_list[lt_id].append(lt[lt_id])
 		for lt_id in range(0, 3):
@@ -92,8 +117,3 @@ class Light_Follower(object):
 	def references(self, value):
 		self._references = value
 
-if __name__ == '__main__':
-	lf = Light_Follower()
-	while True:
-		print lf.read_analog()
-		time.sleep(0.5)
