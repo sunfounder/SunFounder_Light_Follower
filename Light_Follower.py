@@ -4,7 +4,6 @@ import time
 class Light_Follower(object):
 	"""docstring for light_follower_module"""
 	def __init__(self, chn0=0, chn1=1, chn2=2, references=[10, 10, 10], analog_function=None):
-		self.ADC = PCF8591.PCF8591(address)
 		self._references = references
 		if analog_function == None:
 			self.read_analog = None
